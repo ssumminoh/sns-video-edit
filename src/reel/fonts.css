@@ -1,0 +1,7 @@
+/* 타이틀: 은디나루 (은글꼴, GPL-2) */
+@font-face {
+  font-family: 'UnDinaru';
+  src: url('../../fonts/UnDinaru.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}

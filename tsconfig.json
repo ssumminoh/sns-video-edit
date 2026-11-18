@@ -8,7 +8,8 @@
     "skipLibCheck": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "lib": ["DOM", "ES2022"]
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "types": ["vite/client"]
   },
-  "include": ["remotion", "remotion.config.ts"]
+  "include": ["src", "remotion.config.ts", "vite.config.ts"]
 }

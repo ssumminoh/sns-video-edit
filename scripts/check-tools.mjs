@@ -26,8 +26,8 @@ rv ? ok('Remotion', `v${rv}`) : bad('Remotion', 'npm install 필요');
 const hv = pkgVersion('hyperframes');
 hv ? ok('HyperFrames', `v${hv}`) : bad('HyperFrames', 'npm install 필요');
 existsSync(path.join(ROOT, 'hyperframes', 'vendor', 'gsap.min.js'))
-  ? ok('  └ 로컬 GSAP·명조체', 'hyperframes/vendor')
-  : bad('  └ 로컬 GSAP·명조체', 'node scripts/vendor.mjs 실행 필요');
+  ? ok('  └ 로컬 GSAP·글꼴', 'hyperframes/vendor')
+  : bad('  └ 로컬 GSAP·글꼴', 'node scripts/vendor.mjs 실행 필요');
 
 const ff = ffmpeg();
 if (ff) {

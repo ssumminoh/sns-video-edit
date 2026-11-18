@@ -10,10 +10,14 @@
   "scripts": {
     "setup": "npm install && python3 -m venv .venv && .venv/bin/pip install -q -r requirements.txt && npm run whisper:install",
     "postinstall": "node scripts/vendor.mjs",
+    "dev": "node scripts/dev.mjs",
+    "build": "tsc -p . && vite build",
+    "start": "node server/index.mjs",
+    "typecheck": "tsc -p .",
     "check": "node scripts/check-tools.mjs",
     "samples": "bash scripts/make-samples.sh",
-    "remotion:studio": "node scripts/run-with-tools.mjs remotion studio remotion/index.ts",
-    "remotion:render": "node scripts/run-with-tools.mjs remotion render remotion/index.ts DambaekReel out/remotion.mp4",
+    "remotion:studio": "node scripts/run-with-tools.mjs remotion studio src/reel/index.ts",
+    "remotion:render": "node scripts/run-with-tools.mjs remotion render src/reel/index.ts Reel out/remotion.mp4",
     "hf:check": "cd hyperframes && node ../scripts/run-with-tools.mjs hyperframes check",
     "hf:preview": "cd hyperframes && node ../scripts/run-with-tools.mjs hyperframes preview",
     "hf:render": "cd hyperframes && node ../scripts/run-with-tools.mjs hyperframes render -o ../out/hyperframes.mp4",
@@ -23,21 +27,28 @@
     "fetch": "node scripts/fetch.mjs"
   },
   "dependencies": {
-    "@fontsource/noto-serif-jp": "^5.3.1",
-    "@fontsource/noto-serif-kr": "^5.3.1",
+    "@anthropic-ai/sdk": "^1.10.0",
+    "@fontsource/eb-garamond": "^5.3.0",
+    "@fontsource/shippori-mincho": "^5.3.0",
+    "@noonnu/chosun-sm": "^0.1.0",
     "@remotion/bundler": "^4.0.545",
     "@remotion/captions": "^4.0.545",
     "@remotion/cli": "^4.0.545",
     "@remotion/install-whisper-cpp": "^4.0.545",
+    "@remotion/player": "^4.0.545",
     "@remotion/renderer": "^4.0.545",
     "gsap": "^3.13.0",
     "hyperframes": "^0.9.66",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "remotion": "^4.0.545"
+    "remotion": "^4.0.545",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
-    "typescript": "^7.0.2"
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8"
   }
 }

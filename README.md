@@ -1,63 +1,81 @@
-# sns-video-edit
+# 담백 편집기 (sns-video-edit)
 
-브이로그·일상 원본으로 담백한 릴스를 만드는 편집기. 화면 설계(와이어프레임)는 별도 아티팩트에 있고, 이 저장소에는 렌더링과 영상 처리 도구가 들어 있습니다.
+브이로그·일상 원본으로 담백한 릴스를 만드는 개인용 웹 편집기.
 
-## 화면 구성 (렌더 결과)
+## 화면 흐름
 
-- 9:16 (1080×1920) 검은 화면 정중앙에 1:1 (1080×1080) 영상
-- 영상 위: 위치/도시 (명조체)
-- 영상 안 아래쪽: 노랫말·문장 자막 (명조체, 원문 위 / 번역 아래 작게), 첫 자막 위에 〈 아티스트 - 곡 〉
+1. **불러오기·분류**: 영상을 올리면 밝기, 색, 흔들림, 가장 안정적인 구간을 분석하고 고정 앵글로 쓸 수 있는지 나눕니다.
+2. **분위기·순서**: 올린 영상에서 읽은 분위기를 제안합니다(템플릿 없음). 썸네일을 끌어서 순서를 바꿉니다.
+3. **박자·전환**: 음악의 박자를 찾아 컷을 박자에 맞추고, 컷마다 고정 변환·속도·전환을 고릅니다.
+4. **내보내기**: 위치/도시, 자막, 소리를 정하고 미리 본 뒤 1080×1920 MP4로 저장합니다.
 
-## 도구
+어느 화면에서든 오른쪽 아래 **댓글로 고치기**를 누르고 고칠 곳을 찍어 댓글을 남기면, AI가 읽고 편집 내용을 바로 고친 뒤 답을 답니다.
 
-| 도구 | 하는 일 | 명령 |
-| --- | --- | --- |
-| Remotion | React로 영상 조립·렌더 | `npm run remotion:studio`, `npm run remotion:render` |
-| HyperFrames | HTML로 영상 조립·렌더 | `npm run hf:preview`, `npm run hf:check`, `npm run hf:render` |
-| FFmpeg | 변환, 샘플 생성, 고정 앵글 보정(vidstab) | `npm run stabilize -- 입력.mp4 출력.mp4 tripod` |
-| Whisper (whisper.cpp) | 말소리 받아쓰기 → .srt | `npm run transcribe -- inbox/영상.mp4 ko` |
-| yt-dlp | 영상·음원 내려받기 → `inbox/` | `npm run fetch -- <URL> [--audio]` |
+## 완성 영상 구성
 
-## 설치
+- 9:16 검은 화면 정중앙에 1:1 영상
+- 영상 위: 위치/도시 (은디나루)
+- 영상 안 아래쪽: 자막 원문 + 작은 번역 줄. 한국어 조선신명조, 일본어 Shippori Mincho, 영어 EB Garamond
+- 번역 줄: 한국어 → 영어 / 일본어 → 영어·한국어 / 영어 → 한국어
 
-필요: Node.js 22 이상, Python 3, FFmpeg(libvidstab 포함), cmake·g++ (whisper.cpp 빌드용)
+## 실행
+
+필요: Node.js 22 이상, FFmpeg(libvidstab 포함). Whisper·yt-dlp까지 쓰려면 Python 3, cmake, g++.
 
 ```bash
-npm run setup
+npm install
 ```
 
 ```bash
-npm run check
+npm run dev
 ```
 
-`setup`은 npm 패키지, `.venv`의 yt-dlp, whisper.cpp와 `small` 모델(약 490MB)을 설치합니다. 모델은 huggingface.co에서 받습니다. 다른 크기를 쓰려면 `SNS_WHISPER_MODEL=medium npm run whisper:install`.
-
-렌더용 크롬은 이 기기에 있는 것을 먼저 찾고(`SNS_HEADLESS_SHELL`, `SNS_CHROME`으로 지정 가능), 없으면 Remotion·HyperFrames가 직접 내려받습니다.
-
-## 데모
+배포용:
 
 ```bash
-npm run samples
+npm run build
 ```
 
 ```bash
-npm run remotion:render
+npm start
 ```
 
-```bash
-npm run hf:render
-```
+서버는 `PORT`(기본 8787)에서 뜨고, 올린 파일과 프로젝트는 `data/`, 완성 영상은 `out/`에 저장됩니다. 로그인 없이 한 사람이 프로젝트 하나를 쓰는 구조입니다.
 
-결과는 `out/remotion.mp4`, `out/hyperframes.mp4`.
+### AI 연결
 
-## 고정 앵글 보정 모드
+서버에 `ANTHROPIC_API_KEY`를 설정하면 켜집니다.
 
-- `tripod`: 첫 프레임 배경에 완전히 고정. 사람·차만 움직이는 고정 앵글 (기본 12% 확대)
-- `horizon`: 크게 흔들리는 것만 잡고 천천히 흐르게. 버스·지하철 창밖 (6%)
-- `smooth`: 일반 손떨림 보정 (4%)
+- 켜면: 썸네일을 보고 장면 종류·분위기·순서 제안, 자막 번역, 댓글로 고치기
+- 끄면: 색·밝기·움직임 수치만으로 분위기 제안, 번역은 직접 입력, 댓글은 저장만 되고 반영되지 않음
+
+## 코드 구조
+
+| 위치 | 내용 |
+| --- | --- |
+| `src/screens/` | 화면 4개 |
+| `src/Comments.tsx` | 댓글로 고치기 (핀, 말풍선) |
+| `src/shared/` | 데이터 모양(`types`), 타임라인 계산(`reel`), 컷 수정(`clips`), AI 수정 적용·검증(`ops`) |
+| `src/reel/` | 완성 영상(Remotion). 미리보기와 서버 렌더가 같은 코드를 씁니다 |
+| `server/` | 올리기·분석(`media`), AI(`ai`), 라우팅·렌더 작업(`index`) |
+| `scripts/` | 도구 스크립트 (아래) |
+| `hyperframes/` | 같은 화면 구성의 HyperFrames 버전 (실험용) |
+
+## 도구 스크립트
+
+| 명령 | 하는 일 |
+| --- | --- |
+| `npm run check` | Remotion, HyperFrames, FFmpeg, Whisper, yt-dlp 설치 확인 |
+| `npm run setup` | 위 도구 전부 설치 (Whisper `small` 모델 약 490MB 포함) |
+| `npm run stabilize -- 입력.mp4 출력.mp4 tripod` | 고정 앵글 변환. `tripod` / `horizon` / `smooth` |
+| `npm run transcribe -- 영상.mp4 ko` | 말소리 받아쓰기 → `.srt` (노랫말은 잘 못 알아듣습니다) |
+| `npm run fetch -- <URL> [--audio]` | yt-dlp로 내려받기 → `inbox/` |
+| `npm run samples` 후 `npm run remotion:render` | 샘플 클립으로 완성 영상 구성 확인 |
+| `npm run hf:check`, `npm run hf:render` | HyperFrames 버전 검사·렌더 |
 
 ## 알아둘 점
 
-- Whisper는 말소리용입니다. 음악 위 노랫말은 잘 못 알아들으니, 가사 자막은 가사 원문을 넣고 타이밍만 맞추세요.
-- yt-dlp는 본인 영상이나 사용 권한이 있는 콘텐츠에만 쓰세요. 릴스 배경음악은 인스타그램 앱의 음악 기능으로 넣어야 음소거되지 않습니다.
-- 위치/도시 줄은 릴스 상단 UI와, 자막은 틱톡 하단 UI와 일부 겹칠 수 있습니다(`hf:check` 경고). 요청한 레이아웃을 그대로 따른 결과입니다.
+- 고정 가능 여부는 화면 움직임 수치로 나눕니다. 사람이 크게 움직이는 컷은 실제보다 흔들린 것으로 나올 수 있습니다.
+- BPM은 자동으로 찾지만 틀릴 수 있어 화면에서 직접 고칠 수 있습니다.
+- 릴스에 올릴 때 음악은 인스타그램 앱의 음악 기능으로 넣어야 음소거되지 않습니다. 그럴 땐 음악 크기를 0으로 두고 저장하세요.
+- 글꼴 라이선스는 `fonts/README.md`에 있습니다.

@@ -10,3 +10,5 @@ hyperframes/vendor/
 .DS_Store
 .hyperframes/
 hyperframes/.hyperframes/
+data/
+dist/

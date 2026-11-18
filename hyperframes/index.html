@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=1080, height=1920" />
     <!-- 인터넷 없이 렌더되도록 로컬 사본을 쓴다 (npm install 때 scripts/vendor.mjs가 복사). -->
     <script src="./vendor/gsap.min.js"></script>
-    <link rel="stylesheet" href="./vendor/fonts/kr/400.css" />
-    <link rel="stylesheet" href="./vendor/fonts/jp/400.css" />
+    <link rel="stylesheet" href="./vendor/fonts/kr/font.css" />
+    <link rel="stylesheet" href="./vendor/fonts/jp/font.css" />
+    <link rel="stylesheet" href="./vendor/fonts/en/font.css" />
     <style>
       /* 레이아웃: 9:16 검은 화면 정중앙에 1:1 영상(위 420px), 그 위에 위치/도시 */
       :root {
@@ -14,7 +15,13 @@
         --ink: #ffffff;
         --ink-soft: rgba(255, 255, 255, 0.8);
         --ink-faint: rgba(255, 255, 255, 0.7);
-        --font-serif: "Noto Serif KR", "Noto Serif JP", serif;
+        /* 타이틀은 은디나루, 자막은 영어 EB Garamond · 일본어 Shippori Mincho · 한국어 조선신명조 */
+        --font-title: "UnDinaru", sans-serif;
+        --font-serif: "EB Garamond", "Shippori Mincho", "ChosunSm", serif;
+      }
+      @font-face {
+        font-family: "UnDinaru";
+        src: url("./vendor/fonts/title/UnDinaru.ttf") format("truetype");
       }
       * {
         margin: 0;
@@ -51,7 +58,7 @@
         flex-direction: column;
         align-items: center;
         gap: 14px;
-        font-family: var(--font-serif);
+        font-family: var(--font-title);
         color: var(--ink);
         text-align: center;
         letter-spacing: 0.04em;
