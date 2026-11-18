@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ko" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <!-- 인터넷 없이 렌더되도록 로컬 사본을 쓴다 (npm install 때 scripts/vendor.mjs가 복사). -->
+    <script src="./vendor/gsap.min.js"></script>
+    <link rel="stylesheet" href="./vendor/fonts/kr/400.css" />
+    <link rel="stylesheet" href="./vendor/fonts/jp/400.css" />
+    <style>
+      /* 레이아웃: 9:16 검은 화면 정중앙에 1:1 영상(위 420px), 그 위에 위치/도시 */
+      :root {
+        --ground: #000000;
+        --ink: #ffffff;
+        --ink-soft: rgba(255, 255, 255, 0.8);
+        --ink-faint: rgba(255, 255, 255, 0.7);
+        --font-serif: "Noto Serif KR", "Noto Serif JP", serif;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: var(--ground);
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+      .clip {
+        position: absolute;
+      }
+      video.clip {
+        left: 0;
+        top: 420px;
+        width: 1080px;
+        height: 1080px;
+        object-fit: cover;
+      }
+      .place {
+        left: 0;
+        right: 0;
+        bottom: 1556px; /* 영상 위 56px */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        font-family: var(--font-serif);
+        color: var(--ink);
+        text-align: center;
+        letter-spacing: 0.04em;
+      }
+      .place .title {
+        font-size: 44px;
+      }
+      .place .sub {
+        font-size: 28px;
+        color: var(--ink-faint);
+      }
+      /* 밝은 화면에서도 자막이 읽히도록 영상 아래쪽만 살짝 어둡게 */
+      .scrim {
+        left: 0;
+        top: 1014px;
+        width: 1080px;
+        height: 486px;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.45) 70%, rgba(0, 0, 0, 0.5));
+      }
+      /* 담백한 자막: 명조체, 원문 위 / 번역 아래 작게, 영상 안 아래쪽 */
+      .caption {
+        left: 120px;
+        right: 120px;
+        bottom: 492px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        text-align: center;
+        font-family: var(--font-serif);
+        letter-spacing: 0.03em;
+        text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
+        opacity: 0;
+      }
+      .caption .credit {
+        font-size: 24px;
+        color: var(--ink-faint);
+        margin-bottom: 8px;
+      }
+      .caption .main {
+        font-size: 40px;
+        color: var(--ink);
+      }
+      .caption .sub {
+        font-size: 27px;
+        color: var(--ink-soft);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="9" data-width="1080" data-height="1920">
+      <div id="place" class="clip place" data-start="0" data-duration="9" data-track-index="2">
+        <p class="title">서울, 올림픽공원</p>
+        <p class="sub">여름의 끝</p>
+      </div>
+
+      <video id="v1" class="clip" src="assets/clip1.mp4" data-start="0" data-duration="3" data-track-index="0" muted playsinline></video>
+      <video id="v2" class="clip" src="assets/clip2.mp4" data-start="3" data-duration="3" data-track-index="0" muted playsinline></video>
+      <video id="v3" class="clip" src="assets/clip3.mp4" data-start="6" data-duration="3" data-track-index="0" muted playsinline></video>
+      <div id="scrim" class="clip scrim" data-start="0" data-duration="9" data-track-index="1"></div>
+
+      <div id="cap1" class="clip caption" data-start="0" data-duration="3" data-track-index="3">
+        <p class="credit">〈 TOIL, Gist - 몇 번의 여름 〉</p>
+        <p class="main">오늘은 조금 천천히 걸었다</p>
+        <p class="sub">I walked a little slower today</p>
+      </div>
+      <div id="cap3" class="clip caption" data-start="6" data-duration="3" data-track-index="3">
+        <p class="main">今日は少しゆっくり歩いた</p>
+        <p class="sub">I walked a little slower today</p>
+        <p class="sub">오늘은 조금 천천히 걸었다</p>
+      </div>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      // 컷이 바뀌고 0.4초 뒤에 0.3초 동안 나타나고, 끝나기 0.3초 전에 사라진다.
+      for (const [id, start, dur] of [["#cap1", 0, 3], ["#cap3", 6, 3]]) {
+        tl.fromTo(id, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "none" }, start + 0.4);
+        tl.to(id, { opacity: 0, duration: 0.3, ease: "none" }, start + dur - 0.3);
+      }
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

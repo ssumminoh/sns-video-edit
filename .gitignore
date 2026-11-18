@@ -1,0 +1,12 @@
+node_modules/
+.venv/
+.whisper/
+out/
+inbox/
+public/samples/
+hyperframes/assets/
+hyperframes/vendor/
+*.trf
+.DS_Store
+.hyperframes/
+hyperframes/.hyperframes/

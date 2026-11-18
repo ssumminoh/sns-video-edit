@@ -1,0 +1,43 @@
+{
+  "name": "sns-video-edit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "브이로그 원본으로 담백한 릴스를 만드는 편집기",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "setup": "npm install && python3 -m venv .venv && .venv/bin/pip install -q -r requirements.txt && npm run whisper:install",
+    "postinstall": "node scripts/vendor.mjs",
+    "check": "node scripts/check-tools.mjs",
+    "samples": "bash scripts/make-samples.sh",
+    "remotion:studio": "node scripts/run-with-tools.mjs remotion studio remotion/index.ts",
+    "remotion:render": "node scripts/run-with-tools.mjs remotion render remotion/index.ts DambaekReel out/remotion.mp4",
+    "hf:check": "cd hyperframes && node ../scripts/run-with-tools.mjs hyperframes check",
+    "hf:preview": "cd hyperframes && node ../scripts/run-with-tools.mjs hyperframes preview",
+    "hf:render": "cd hyperframes && node ../scripts/run-with-tools.mjs hyperframes render -o ../out/hyperframes.mp4",
+    "whisper:install": "NODE_USE_ENV_PROXY=1 node scripts/whisper-install.mjs",
+    "transcribe": "node scripts/transcribe.mjs",
+    "stabilize": "bash scripts/stabilize.sh",
+    "fetch": "node scripts/fetch.mjs"
+  },
+  "dependencies": {
+    "@fontsource/noto-serif-jp": "^5.3.1",
+    "@fontsource/noto-serif-kr": "^5.3.1",
+    "@remotion/bundler": "^4.0.545",
+    "@remotion/captions": "^4.0.545",
+    "@remotion/cli": "^4.0.545",
+    "@remotion/install-whisper-cpp": "^4.0.545",
+    "@remotion/renderer": "^4.0.545",
+    "gsap": "^3.13.0",
+    "hyperframes": "^0.9.66",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "remotion": "^4.0.545"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "typescript": "^7.0.2"
+  }
+}
