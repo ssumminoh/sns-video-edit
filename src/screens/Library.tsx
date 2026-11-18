@@ -59,9 +59,9 @@ export function Library({ project, update, ai, go, notify }: ScreenProps) {
             <div className="muted small">{ai ? '다음 단계에서 분위기를 읽을 때 장면 종류도 함께 붙여요.' : 'AI를 연결하면 장면 종류(공간, 손, 음식…)로 나눠 볼 수 있어요.'}</div>
           ) : (
             <div className="row">
-              <button className={`chip ${scene === null ? 'on' : ''}`} onClick={() => setScene(null)}>전체 {clips.length}</button>
+              <button className={`chip ${scene === null ? 'selected' : ''}`} onClick={() => setScene(null)}>전체 {clips.length}</button>
               {scenes.map((s) => (
-                <button key={s} className={`chip ${scene === s ? 'on' : ''}`} onClick={() => setScene(s)}>
+                <button key={s} className={`chip ${scene === s ? 'selected' : ''}`} onClick={() => setScene(s)}>
                   {s} {clips.filter((c) => c.scene === s).length}
                 </button>
               ))}
@@ -69,11 +69,11 @@ export function Library({ project, update, ai, go, notify }: ScreenProps) {
           )}
         </div>
         <div className="stack tight">
-          <div className="label ai">고정 앵글로 쓸 수 있나</div>
+          <div className="label ai-suggestion">고정 앵글로 쓸 수 있나</div>
           <div className="row">
-            <button className={`chip ${fix === null ? 'on' : ''}`} onClick={() => setFix(null)}>전체</button>
+            <button className={`chip ${fix === null ? 'selected' : ''}`} onClick={() => setFix(null)}>전체</button>
             {(['fixed', 'convertible', 'hard'] as const).map((f) => (
-              <button key={f} className={`chip ${fix === f ? 'on' : f === 'hard' ? '' : 'ai'}`} onClick={() => setFix(f)}>
+              <button key={f} className={`chip ${fix === f ? 'selected' : f === 'hard' ? '' : 'ai-suggestion'}`} onClick={() => setFix(f)}>
                 {FIX_LABEL[f]} {count(f)}
               </button>
             ))}
@@ -84,10 +84,10 @@ export function Library({ project, update, ai, go, notify }: ScreenProps) {
 
       <main className="main">
         <div className="row">
-          <div className="h">영상 {clips.length}개 · 총 {formatTime(total)}</div>
+          <div className="heading">영상 {clips.length}개 · 총 {formatTime(total)}</div>
           <div className="muted">고른 영상 {included}개</div>
           <div className="grow" />
-          <button className="btn" onClick={() => picker.current?.click()}>+ 영상 추가</button>
+          <button className="button" onClick={() => picker.current?.click()}>+ 영상 추가</button>
           <input ref={picker} id="clip-files" type="file" accept="video/*" multiple hidden onChange={(e) => { upload([...(e.target.files ?? [])]); e.target.value = ''; }} />
         </div>
         <button
@@ -106,19 +106,19 @@ export function Library({ project, update, ai, go, notify }: ScreenProps) {
           {shown.map((c) => {
             const v = verdict(c);
             return (
-              <div key={c.id} data-clip={c.id} className={`card ${c.included ? '' : 'off'}`}>
+              <div key={c.id} data-clip={c.id} className={`card ${c.included ? '' : 'excluded'}`}>
                 <div className="thumb" style={{ backgroundImage: `url(${c.thumb})` }}>
-                  <span className={`tl ${v.kind === 'good' ? 'ai' : ''}`}>{BADGE[v.kind]}</span>
-                  <span className="br">{formatTime(c.duration)}</span>
+                  <span className={`thumb-badge status ${v.kind === 'good' ? 'ai-suggestion' : ''}`}>{BADGE[v.kind]}</span>
+                  <span className="thumb-badge duration">{formatTime(c.duration)}</span>
                 </div>
-                <div className="b ellipsis" title={c.name}>{c.title ?? c.name}</div>
+                <div className="bold ellipsis" title={c.name}>{c.title ?? c.name}</div>
                 {c.scene ? <div className="muted small">{c.scene} · {c.shot}</div> : null}
-                <div className={`small ${c.fixability === 'hard' ? 'muted' : 'ai'}`}>{fixLine(c)}</div>
+                <div className={`small ${c.fixability === 'hard' ? 'muted' : 'ai-suggestion'}`}>{fixLine(c)}</div>
                 <div className="row">
                   <label className="row grow small">
                     <input type="checkbox" checked={c.included} onChange={(e) => update((p) => setIncluded(p, c.id, e.target.checked))} /> 이 영상 쓰기
                   </label>
-                  <button className="btn sm" onClick={() => remove(c.id)} aria-label={`${c.name} 삭제`}>삭제</button>
+                  <button className="button small" onClick={() => remove(c.id)} aria-label={`${c.name} 삭제`}>삭제</button>
                 </div>
               </div>
             );
@@ -128,14 +128,14 @@ export function Library({ project, update, ai, go, notify }: ScreenProps) {
       </main>
 
       <aside className="panel">
-        <div className="label ai">분류 요약</div>
+        <div className="label ai-suggestion">분류 요약</div>
         <div>
           쓸 만한 컷 <b>{verdicts.filter((x) => x.v.kind === 'good').length}개</b>, 다듬으면 쓸 컷 <b>{verdicts.filter((x) => x.v.kind === 'trim').length}개</b>, 빼는 걸 추천{' '}
           <b>{verdicts.filter((x) => x.v.kind === 'exclude').length}개</b>
         </div>
         <div className="rule" />
         <div className="stack tight">
-          <div className="b">살펴볼 컷</div>
+          <div className="bold">살펴볼 컷</div>
           {verdicts.filter((x) => x.v.kind !== 'good').length === 0 ? <div className="muted">없어요.</div> : null}
           {verdicts.filter((x) => x.v.kind !== 'good').map(({ clip, v }) => (
             <div key={clip.id} className="row">
@@ -146,14 +146,14 @@ export function Library({ project, update, ai, go, notify }: ScreenProps) {
         </div>
         <div className="rule" />
         <div className="stack tight">
-          <div className="b">고정 앵글 컷</div>
+          <div className="bold">고정 앵글 컷</div>
           <div className="muted">
             원래 고정된 컷 {count('fixed')}개, 흔들림을 지워 삼각대로 찍은 것처럼 바꿀 수 있는 컷 {count('convertible')}개예요. 변환은 3단계에서 컷마다 고릅니다.
           </div>
           <div className="muted">다음에 찍을 때 휴대폰을 어딘가에 올려두고 10초만 찍어두면 가장 자연스러운 고정 컷이 돼요.</div>
         </div>
         <div className="grow" />
-        <button className="btn primary" disabled={included === 0} onClick={() => go('mood')}>분위기 제안 받기 →</button>
+        <button className="button primary" disabled={included === 0} onClick={() => go('mood')}>분위기 제안 받기 →</button>
       </aside>
     </div>
   );

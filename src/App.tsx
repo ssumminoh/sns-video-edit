@@ -82,7 +82,7 @@ export function App() {
         <div className="brand">릴스 편집기</div>
         <nav className="steps">
           {STEPS.map((s) => (
-            <button key={s.id} className={`step ${s.id === step ? 'on' : ''}`} onClick={() => go(s.id)}>
+            <button key={s.id} className={`step ${s.id === step ? 'selected' : ''}`} onClick={() => go(s.id)}>
               {s.label}
             </button>
           ))}
@@ -94,7 +94,7 @@ export function App() {
       {message ? (
         <div className="banner" role="alert">
           <span>{message}</span>
-          <button className="btn sm" onClick={() => setMessage('')}>
+          <button className="button small" onClick={() => setMessage('')}>
             닫기
           </button>
         </div>

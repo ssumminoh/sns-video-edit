@@ -91,7 +91,7 @@ export function Export({ project, update, ai, notify }: ScreenProps) {
           <div className="label">자막 원문 언어 → 아래 번역</div>
           <div className="row">
             {LANGS.map((l) => (
-              <button key={l.code} className={`btn grow ${project.captionLang === l.code ? 'on' : ''}`} onClick={() => update((p) => ({ ...p, captionLang: l.code }))}>{l.label}</button>
+              <button key={l.code} className={`button grow ${project.captionLang === l.code ? 'selected' : ''}`} onClick={() => update((p) => ({ ...p, captionLang: l.code }))}>{l.label}</button>
             ))}
           </div>
           <div className="muted small">원문 아래에 {subs.map((s) => s.label).join(', ')} 번역이 작게 붙어요. 한국어는 조선신명조, 일본어·영어는 톤을 맞춘 명조·세리프예요.</div>
@@ -109,7 +109,7 @@ export function Export({ project, update, ai, notify }: ScreenProps) {
                     ))
                   : null}
                 {c.caption.main.trim() && ai ? (
-                  <button className="btn sm ai" disabled={translating !== null} onClick={() => translate(c)}>{translating === c.id ? '번역 중…' : 'AI로 번역 채우기'}</button>
+                  <button className="button small ai-suggestion" disabled={translating !== null} onClick={() => translate(c)}>{translating === c.id ? '번역 중…' : 'AI로 번역 채우기'}</button>
                 ) : null}
               </div>
             </div>
@@ -136,7 +136,7 @@ export function Export({ project, update, ai, notify }: ScreenProps) {
       </main>
 
       <aside className="panel" style={{ width: 320, overflow: 'visible' }}>
-        <div className="label ai">올리기 전 마지막 점검</div>
+        <div className="label ai-suggestion">올리기 전 마지막 점검</div>
         <div className="stack tight">
           {checklist(project, clips, seconds).map((n, i) => (
             <div key={i} className={`note ${n.ok ? 'ok' : ''}`}><b>{n.ok ? '✓' : '!'}</b><span>{n.text}</span></div>
@@ -151,8 +151,8 @@ export function Export({ project, update, ai, notify }: ScreenProps) {
           <div className="stack tight"><div>영상을 만드는 중… {Math.round(job.progress * 100)}%</div><progress value={job.progress} max={1} /></div>
         ) : null}
         {job?.status === 'error' ? <div role="alert" style={{ whiteSpace: 'pre-wrap' }}>영상을 만들지 못했어요. {job.error}</div> : null}
-        {job?.status === 'done' && job.file ? <a className="btn" style={{ display: 'grid', placeItems: 'center', textDecoration: 'none' }} href={job.file} target="_blank" rel="noreferrer">완성된 영상 열기</a> : null}
-        <button className="btn primary" disabled={props.clips.length === 0 || job?.status === 'rendering'} onClick={render}>영상 저장</button>
+        {job?.status === 'done' && job.file ? <a className="button" style={{ display: 'grid', placeItems: 'center', textDecoration: 'none' }} href={job.file} target="_blank" rel="noreferrer">완성된 영상 열기</a> : null}
+        <button className="button primary" disabled={props.clips.length === 0 || job?.status === 'rendering'} onClick={render}>영상 저장</button>
       </aside>
     </div>
   );

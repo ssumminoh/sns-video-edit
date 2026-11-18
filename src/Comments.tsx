@@ -89,14 +89,14 @@ export function Comments({ step, project, update, ai, notify }: Pick<ScreenProps
           {open === c.id ? (
             <div className="comment-pop">
               <div className="muted small ellipsis">{c.target.label}</div>
-              <div className="b">{c.text}</div>
+              <div className="bold">{c.text}</div>
               <div className={c.status === 'done' ? 'ai' : 'muted'}>
                 {c.status === 'pending' ? 'AI가 읽고 있어요…' : c.reply}
                 {c.status === 'done' ? <span className="muted small"> · 수정 {c.applied}개 반영</span> : null}
               </div>
               <div className="row">
                 <div className="grow" />
-                <button className="btn sm" onClick={() => update((p) => ({ ...p, comments: p.comments.filter((x) => x.id !== c.id) }))}>해결됨으로 지우기</button>
+                <button className="button small" onClick={() => update((p) => ({ ...p, comments: p.comments.filter((x) => x.id !== c.id) }))}>해결됨으로 지우기</button>
               </div>
             </div>
           ) : null}
@@ -114,14 +114,14 @@ export function Comments({ step, project, update, ai, notify }: Pick<ScreenProps
             {!ai ? <div className="muted small">AI가 연결되지 않아 지금은 반영되지 않아요.</div> : null}
             <div className="row">
               <div className="grow" />
-              <button type="button" className="btn sm" onClick={() => { setDraft(null); setText(''); }}>취소</button>
-              <button type="submit" className="btn sm ai" disabled={!text.trim()}>보내기</button>
+              <button type="button" className="button small" onClick={() => { setDraft(null); setText(''); }}>취소</button>
+              <button type="submit" className="button small ai-suggestion" disabled={!text.trim()}>보내기</button>
             </div>
           </form>
         </div>
       ) : null}
 
-      <button className={`btn comment-toggle ${placing ? 'on' : ''}`} onClick={() => { setPlacing(!placing); setDraft(null); setOpen(null); }}>
+      <button className={`button comment-toggle ${placing ? 'selected' : ''}`} onClick={() => { setPlacing(!placing); setDraft(null); setOpen(null); }}>
         {placing ? '고칠 곳을 누르세요 · 취소' : `댓글로 고치기${here.length ? ` (${here.length})` : ''}`}
       </button>
     </div>

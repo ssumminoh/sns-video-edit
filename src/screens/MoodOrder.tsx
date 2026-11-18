@@ -50,19 +50,19 @@ export function MoodOrder({ project, update, go, notify }: ScreenProps) {
     <div className="screen">
       <main className="main">
         <div className="row">
-          <div className="label ai">내 영상에서 읽은 분위기</div>
+          <div className="label ai-suggestion">내 영상에서 읽은 분위기</div>
           <div className="muted small">
             {loading ? '영상을 읽는 중…' : project.moodSource === 'ai' ? '썸네일을 보고 낸 제안이에요.' : project.moodSource === 'heuristic' ? '색, 밝기, 움직임 수치만 보고 낸 제안이에요.' : ''}
           </div>
           <div className="grow" />
-          <button className="btn sm" disabled={loading || clips.length === 0} onClick={analyze}>다시 읽기</button>
+          <button className="button small" disabled={loading || clips.length === 0} onClick={analyze}>다시 읽기</button>
         </div>
 
         <div className="grid3">
           {project.moods.map((m, i) => (
-            <button key={i} className={`mood ${project.mood === i ? 'on' : ''}`} onClick={() => pickMood(i)}>
+            <button key={i} className={`mood ${project.mood === i ? 'selected' : ''}`} onClick={() => pickMood(i)}>
               <div className="swatches">{m.colors.map((c, j) => <i key={j} style={{ background: c }} />)}</div>
-              <div className="b" style={{ fontSize: 14 }}>{m.name}</div>
+              <div className="bold">{m.name}</div>
               <div className="muted">{m.read}</div>
               <div className="small">박자 · {RHYTHMS[m.rhythm].name} ({RHYTHMS[m.rhythm].sub})</div>
               <div className="small">자막 · {m.captionHint}</div>
@@ -72,11 +72,11 @@ export function MoodOrder({ project, update, go, notify }: ScreenProps) {
         {clips.length === 0 ? <div className="muted">고른 영상이 없어요. 1단계에서 영상을 올리고 골라주세요.</div> : null}
 
         <div className="row">
-          <div className="b" style={{ fontSize: 15 }}>순서</div>
+          <div className="heading">순서</div>
           <div className="muted small">썸네일을 끌어다 놓아 순서를 바꾸세요 · 키보드는 ← → 버튼</div>
           <div className="grow" />
-          <button className="btn sm ai" disabled={!canSuggest} onClick={() => update((p) => ({ ...p, order: suggested }))}>순서 제안 적용</button>
-          <button className="btn sm" onClick={() => update((p) => ({ ...p, order: uploadOrder }))}>올린 순서로</button>
+          <button className="button small ai-suggestion" disabled={!canSuggest} onClick={() => update((p) => ({ ...p, order: suggested }))}>순서 제안 적용</button>
+          <button className="button small" onClick={() => update((p) => ({ ...p, order: uploadOrder }))}>올린 순서로</button>
         </div>
 
         <div className="grid4">
@@ -92,16 +92,16 @@ export function MoodOrder({ project, update, go, notify }: ScreenProps) {
               onDragEnd={() => { setDrag(null); setOver(null); }}
             >
               <div className="thumb" style={{ backgroundImage: `url(${c.thumb})` }}>
-                <span className="no">{pos + 1}</span>
-                <span className="tr">{formatTime(c.duration)}</span>
+                <span className="thumb-order">{pos + 1}</span>
+                <span className="thumb-badge duration">{formatTime(c.duration)}</span>
               </div>
               <div className="row" style={{ flexWrap: 'nowrap' }}>
                 <div className="grow" style={{ minWidth: 0 }}>
-                  <div className="b ellipsis">{c.title ?? c.name}</div>
+                  <div className="bold ellipsis">{c.title ?? c.name}</div>
                   <div className="muted small ellipsis">{c.shot ? `${c.shot} · ` : ''}{FIX_LABEL[c.fixability]}</div>
                 </div>
-                <button className="btn sm" aria-label="앞으로" disabled={pos === 0} onClick={() => move(pos, pos - 1)}>←</button>
-                <button className="btn sm" aria-label="뒤로" disabled={pos === clips.length - 1} onClick={() => move(pos, pos + 1)}>→</button>
+                <button className="button small" aria-label="앞으로" disabled={pos === 0} onClick={() => move(pos, pos - 1)}>←</button>
+                <button className="button small" aria-label="뒤로" disabled={pos === clips.length - 1} onClick={() => move(pos, pos + 1)}>→</button>
               </div>
             </div>
           ))}
@@ -109,17 +109,17 @@ export function MoodOrder({ project, update, go, notify }: ScreenProps) {
       </main>
 
       <aside className="panel">
-        <div className="label ai">고른 분위기</div>
+        <div className="label ai-suggestion">고른 분위기</div>
         {mood ? (
           <>
-            <div className="b" style={{ fontSize: 15 }}>{mood.name}</div>
+            <div className="heading">{mood.name}</div>
             <div className="muted">{mood.why}</div>
           </>
         ) : (
           <div className="muted">{project.ownMood ? project.ownMood : '제안 중 하나를 고르거나 아래에 직접 써주세요. 고르면 그 분위기에 맞는 박자가 적용돼요.'}</div>
         )}
         <div className="rule" />
-        <div className="label ai">지금 순서에 대한 메모</div>
+        <div className="label ai-suggestion">지금 순서에 대한 메모</div>
         <div className="stack tight">
           {orderNotes(clips).map((n, i) => (
             <div key={i} className={`note ${n.ok ? 'ok' : ''}`}><b>{n.ok ? '✓' : '!'}</b><span>{n.text}</span></div>
@@ -131,7 +131,7 @@ export function MoodOrder({ project, update, go, notify }: ScreenProps) {
           <span className="muted small">분위기를 직접 한 줄로 쓰기</span>
           <input id="own-mood" className="input" value={project.ownMood} placeholder="예: 비 오기 직전의 공원" onChange={(e) => update((p) => ({ ...p, ownMood: e.target.value }))} />
         </label>
-        <button className="btn primary" disabled={clips.length === 0} onClick={() => go('rhythm')}>박자 맞추기 →</button>
+        <button className="button primary" disabled={clips.length === 0} onClick={() => go('rhythm')}>박자 맞추기 →</button>
       </aside>
     </div>
   );
