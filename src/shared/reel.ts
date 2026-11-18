@@ -104,6 +104,13 @@ export const formatTime = (seconds: number) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 
+/** 편집 프로그램식 시간 표기 00:00:SS:FF */
+export const formatTimecode = (seconds: number) => {
+  const frames = Math.max(0, Math.round(seconds * FPS));
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `00:${pad(Math.floor(frames / FPS / 60))}:${pad(Math.floor(frames / FPS) % 60)}:${pad(frames % FPS)}`;
+};
+
 export const FIX_LABEL = { fixed: '원래 고정', convertible: '변환하면 가능', hard: '고정 어려움' } as const;
 export const FIX_MODES = {
   tripod: { name: '삼각대 고정', zoom: 12, help: '배경 전체를 첫 프레임에 고정해요. 사람과 차만 움직입니다. 카메라를 따라 돌린 컷에는 쓸 수 없어요.' },

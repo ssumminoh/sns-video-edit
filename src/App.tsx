@@ -79,7 +79,7 @@ export function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div className="brand">담백 편집기</div>
+        <div className="brand">릴스 편집기</div>
         <nav className="steps">
           {STEPS.map((s) => (
             <button key={s.id} className={`step ${s.id === step ? 'on' : ''}`} onClick={() => go(s.id)}>

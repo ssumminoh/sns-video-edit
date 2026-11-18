@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { api } from '../api';
 import type { ScreenProps } from '../App';
 import { applyRhythm, patchClip, setBpm } from '../shared/clips';
-import { FIX_MODES, RHYTHMS, beatSeconds, formatTime, maxBeats, orderedClips } from '../shared/reel';
+import { FIX_MODES, RHYTHMS, beatSeconds, formatTime, formatTimecode, maxBeats, orderedClips } from '../shared/reel';
 import type { Clip, FixMode, Rhythm as RhythmId } from '../shared/types';
 
 const SPEEDS = [1, 1.5, 2];
@@ -56,6 +56,8 @@ export function Rhythm({ project, update, go, notify }: ScreenProps) {
   const mode = FIX_MODES[clip.fixMode];
   const converted = clip.fixMode === 'none' || clip.stabilized?.mode === clip.fixMode;
   const limit = maxBeats(clip, project.bpm);
+  const startBeat = clips.slice(0, index).reduce((sum, c) => sum + c.beats, 0);
+  const cols = { gridTemplateColumns: `repeat(${totalBeats}, minmax(0, 1fr))` };
 
   return (
     <div className="screen" style={{ flexDirection: 'column', overflowY: 'auto' }}>
@@ -71,7 +73,7 @@ export function Rhythm({ project, update, go, notify }: ScreenProps) {
         <section className="main">
           <div className="stack tight">
             <div className="label">음악</div>
-            <div className="row" style={{ padding: '10px 12px', border: '1px solid var(--line)', borderRadius: 4 }}>
+            <div className="row boxed">
               <div className="grow" style={{ minWidth: 0 }}>
                 <div className="b ellipsis">{project.music ? project.music.name : '음악 없음'}</div>
                 <div className="muted small">
@@ -158,30 +160,37 @@ export function Rhythm({ project, update, go, notify }: ScreenProps) {
 
       <section className="timeline">
         <div className="row">
-          <div className="b">타임라인</div>
+          <span className="tc now">{formatTimecode(startBeat * beatSeconds(project.bpm))}</span>
+          <span className="tc muted">/ {formatTimecode(seconds)}</span>
           <div className="muted small">세로선 = 음악 박자 · 컷은 박자선에 붙습니다 · 블록을 누르면 위에서 고칠 수 있어요</div>
         </div>
-        <div className="track">
-          <div className="label">박자</div>
-          <div className="beats" style={{ gridTemplateColumns: `repeat(${totalBeats}, minmax(0, 1fr))` }}>
-            {Array.from({ length: totalBeats }, (_, i) => <div key={i} className={i % 4 === 0 ? 'bar' : ''}>{i % 4 === 0 ? i / 4 + 1 : ''}</div>)}
+        <div className="tl">
+          <div className="tl-heads">
+            <div className="h-ruler">박자</div>
+            <div className="h-video"><i style={{ background: 'var(--track-video)' }} />V1 영상</div>
+            <div className="h-audio"><i style={{ background: 'var(--track-original)' }} />A1 현장음</div>
+            {project.music ? <div className="h-audio"><i style={{ background: 'var(--track-music)' }} />A2 음악</div> : null}
+          </div>
+          <div className="tl-lanes">
+            <div className="lane ruler h-ruler" style={cols}>
+              {Array.from({ length: totalBeats }, (_, i) => <div key={i} className={i % 4 === 0 ? 'bar' : ''}>{i % 4 === 0 ? i / 4 + 1 : ''}</div>)}
+            </div>
+            <div className="lane h-video" style={cols}>
+              {clips.map((c, i) => (
+                <button key={c.id} data-clip={c.id} className={`block ${c.id === clip.id ? 'on' : ''}`} style={{ gridColumn: `span ${c.beats}` }} onClick={() => setSelected(c.id)}>
+                  <span className="tag">{i === 0 ? '시작' : c.transition === 'dissolve' ? '디졸브' : '컷'}</span>
+                  <span className="b ellipsis">{c.title ?? c.name}</span>
+                  <span className="meta ellipsis">{c.beats}박{c.fixMode !== 'none' ? ` · ${FIX_MODES[c.fixMode].name}${c.stabilized?.mode === c.fixMode ? '' : ' (변환 전)'}` : ''}</span>
+                </button>
+              ))}
+            </div>
+            <div className="lane h-audio" style={cols}>
+              {clips.map((c) => <div key={c.id} className="wave" style={{ gridColumn: `span ${c.beats}` }} />)}
+            </div>
+            {project.music ? <div className="lane h-audio"><div className="wave music" /></div> : null}
+            <div className="playhead" style={{ left: `${(startBeat / totalBeats) * 100}%` }} />
           </div>
         </div>
-        <div className="track">
-          <div className="label">영상</div>
-          <div className="blocks" style={{ gridTemplateColumns: `repeat(${totalBeats}, minmax(0, 1fr))` }}>
-            {clips.map((c, i) => (
-              <button key={c.id} data-clip={c.id} className={`block ${c.id === clip.id ? 'on' : ''}`} style={{ gridColumn: `span ${c.beats}` }} onClick={() => setSelected(c.id)}>
-                <span className="small ai b">{i === 0 ? '시작' : c.transition === 'dissolve' ? '디졸브' : '컷'}</span>
-                <span className="b ellipsis">{c.title ?? c.name}</span>
-                <span className="small muted ellipsis">{c.beats}박{c.fixMode !== 'none' ? ` · ${FIX_MODES[c.fixMode].name}${c.stabilized?.mode === c.fixMode ? '' : ' (변환 전)'}` : ''}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-        {project.music ? (
-          <div className="track"><div className="label">음악</div><div className="wave" /></div>
-        ) : null}
       </section>
     </div>
   );

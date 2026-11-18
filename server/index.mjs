@@ -224,4 +224,4 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => console.log(`담백 편집기 서버: http://localhost:${PORT} (AI ${aiConnected() ? '연결됨' : '미연결'})`));
+server.listen(PORT, () => console.log(`릴스 편집기 서버: http://localhost:${PORT} (AI ${aiConnected() ? '연결됨' : '미연결'})`));
