@@ -47,6 +47,20 @@ AI(Claude)와 사람이 이 앱의 화면을 고칠 때 따르는 규칙: 네이
 4 에셋       assets      글꼴, 아이콘
 ```
 
+**참고한 시스템과 맞춘 점** (2026-11-18에 두 사이트의 토큰·컴포넌트 문서를 직접 읽고 정리)
+
+| | Material 3 | Ant Design | 이 시스템 |
+| --- | --- | --- | --- |
+| 원본 값 | reference 토큰 (`md.ref.palette.secondary90`) | Seed 토큰 → 알고리즘이 Map 토큰으로 펼침 | 기초 토큰 (`--primitive-amber-500`) |
+| 역할 | system 토큰 (`md.sys.color.on-secondary`). 테마는 여기서 갈린다 | Alias 토큰 (`colorLink`) | 역할 토큰 (`--color-action-primary`) |
+| 컴포넌트 값 | component 토큰 (`md.comp.fab.primary.container.color`). system 토큰을 가리킨다 | Component 토큰. 컴포넌트끼리 영향 없음 | `DESIGN.md`의 `components` (역할 토큰을 가리킨다) |
+| 이름 순서 | 넓은 것 → 좁은 것 (시스템.종류.역할) | 분류 + 역할 (`colorPrimaryBg`) | 분류-역할-변형 (`color-surface-panel-raised`) |
+| 상황별 값 | context (어두운 테마, 촘촘한 배치 등) | algorithm (dark, compact, 조합 가능) | 어두운 화면 + 촘촘한 배치 하나뿐. 늘리면 역할 토큰에서 가른다 |
+| 컴포넌트 묶음 | 목적별: action, containment, communication, navigation, selection, text input | General, Layout, Navigation, Data Entry, Data Display, Feedback | 4.3의 목적별 묶음 |
+
+가져온 원칙: ① 컴포넌트 값은 날 값이 아니라 역할 토큰을 가리킨다(M3). ② 값이 바뀌어도 이름과 쓰임은 그대로다(M3). ③ 한 컴포넌트의 토큰을 고쳐도 다른 컴포넌트가 바뀌지 않는다(Ant). ④ 컴포넌트는 생김새가 아니라 목적으로 묶는다(둘 다).
+Stitch와 Claude Design은 로그인해야 쓰는 도구라 내부를 읽지 못했다.
+
 아래 계층은 바로 위 계층만 쓴다. 건너뛰지 않는다.
 
 | 계층 | 쓸 수 있는 것 | 쓸 수 없는 것 | 이름 규칙 | 있는 곳 |
@@ -98,18 +112,26 @@ AI(Claude)와 사람이 이 앱의 화면을 고칠 때 따르는 규칙: 네이
 
 ### 4.3 컴포넌트 [확정]
 
-| 컴포넌트 | 변형 | 상태 |
-| --- | --- | --- |
-| 버튼 | 기본, 주 버튼(화면당 1개), AI 제안, 작은 버튼 | 기본, 올림, 선택, 비활성, 진행 중(글자로 표시) |
-| 칩 | 기본, AI | 기본, 선택 |
-| 입력칸 | 글자, 숫자, 여러 줄, 슬라이더, 체크 | 기본, 올림, 초점 |
-| 영상 카드 | 목록용, 순서용(끌기) | 기본, 제외됨, 끄는 중, 놓을 자리 |
-| 분위기 카드 | - | 기본, 선택 |
-| 타임라인 블록 | 영상, 현장음, 음악 | 기본, 선택 |
-| 재생 위치 | - | - |
-| 메모 줄 | 좋음(✓), 살펴보기(!) | - |
-| 알림 띠 | 오류·안내 | - |
-| 댓글 핀·말풍선 | 새 댓글, 기존 댓글 | 대기, 반영됨, 오류 |
+목적으로 묶는다. 새 컴포넌트는 먼저 어느 묶음인지 정하고, 같은 묶음의 기존 컴포넌트와 높이·모서리·상태를 맞춘다.
+
+| 묶음 | 컴포넌트 (CSS 클래스) | 변형 | 상태 |
+| --- | --- | --- | --- |
+| 행동 | 버튼 `.button` | 기본, 주 버튼 `primary`(화면당 1개), AI 제안 `ai-suggestion`, 작은 버튼 `small` | 기본, 올림, 선택 `selected`, 비활성, 진행 중(글자로 표시) |
+| 고르기 | 칩 `.chip` | 기본, AI | 기본, 선택 |
+| | 분위기 카드 `.mood` | - | 기본, 올림, 선택 |
+| | 작업 단계 탭 `.step` | - | 기본, 올림, 선택 |
+| 입력 | 입력칸 `.input` | 글자, 숫자 `number`, 여러 줄 | 기본, 올림, 초점 |
+| | 슬라이더, 체크 | - | 브라우저 기본 + 강조색 |
+| | 영상 놓는 곳 `.drop` | - | 기본, 올림, 놓는 중 `over`, 분석 중(글자로 표시) |
+| 보여주기 | 영상 카드 `.card` | 목록용, 순서용 `sortable` | 기본, 제외됨 `excluded`, 끄는 중 `drag`, 놓을 자리 `over` |
+| | 썸네일 배지 `.thumb-badge`, 번호표 `.thumb-order` | 판정 `status`, 길이 `duration` | 판정은 추천이면 AI 색 |
+| | 타임라인 블록 `.block`, 소리 띠 `.wave` | 영상, 현장음, 음악 `music` | 기본, 올림, 선택 |
+| | 재생 위치 `.playhead` | - | - |
+| 알려주기 | 메모 줄 `.note` | 좋음 `ok`(✓), 살펴보기(!) | - |
+| | 알림 띠 `.banner` | 오류·안내 | - |
+| | 진행 막대 `progress` | - | - |
+| | 댓글 핀 `.comment-pin`, 말풍선 `.comment-pop` | 새 댓글, 기존 댓글 | 대기 `pending`, 반영됨 `done`, 오류 `error` |
+| 담기 | 패널 `.side` `.main` `.panel`, 상자 `.boxed`, 인스펙터 `.inspector`, 수정 기록 패널 `.history-panel` | - | - |
 
 ### 4.4 패턴 [확정]
 

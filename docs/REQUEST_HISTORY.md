@@ -23,3 +23,4 @@
 | 13 | 디자인 시스템 규칙 정리, 기획 정의 필요한 것 목록 | 토큰 → 컴포넌트 → 패턴 → 에셋 계층과 규칙, 미정 목록 | `DESIGN_SYSTEM.md` |
 | 14 | DESIGN.md 형식으로 정리, 피그마에 디자인 시스템, 글자 10~12px | DESIGN.md 작성, 역할 토큰으로 CSS 재작성, 본문 11px. 피그마는 편집 권한 문제로 보류 | `DESIGN.md`, `src/styles.css` |
 | 15 | 기능은 일단 잘 동작하게. 수정 요청은 기록을 남겨 분류 기준과 감성을 조금씩 고치기 | 수정 기록 + 취향 메모(AI 제안에 반영), 댓글 수정 되돌리기, 이 문서 | `server/history.mjs`, `src/History.tsx` |
+| 16 | 참고 사이트(Stitch, Claude Design, Ant Design, Material 3)를 직접 열어 구조를 파악할 것 | Ant Design과 Material 3의 토큰 계층·컴포넌트 묶음을 읽고 대응표와 목적별 컴포넌트 표로 반영. Stitch와 Claude Design은 로그인이 필요해 읽지 못함 | `DESIGN_SYSTEM.md` 3장, 4.3 |
