@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { api } from '../api';
+import { api, logHistory } from '../api';
 import type { ScreenProps } from '../App';
 import { addClip, newClip, removeClip, setIncluded, verdict } from '../shared/clips';
 import { FIX_LABEL, formatTime } from '../shared/reel';
@@ -36,6 +36,16 @@ export function Library({ project, update, ai, go, notify }: ScreenProps) {
       }
       setUploading((u) => u.filter((n, i) => i !== u.indexOf(file.name)));
     }
+  }
+
+  /** 추천과 다르게 고르면 기록한다. 분류 기준을 다듬는 데 쓴다. */
+  function toggle(c: Clip, included: boolean) {
+    update((p) => setIncluded(p, c.id, included));
+    const v = verdict(c);
+    const facts = [c.scene, c.shot, FIX_LABEL[c.fixability], `밝기 ${c.brightness}`, `${c.duration.toFixed(1)}초`].filter(Boolean).join(', ');
+    const about = `${c.title ?? c.name} (${facts})`;
+    if (included && v.kind !== 'good') logHistory('include', `"${v.reason}"(으)로 ${v.kind === 'exclude' ? '빼라고 추천한' : '다듬으라고 표시한'} 영상을 그대로 씀: ${about}`);
+    if (!included && v.kind === 'good') logHistory('include', `추천으로 표시한 영상을 뺌: ${about}`);
   }
 
   function remove(id: string) {
@@ -116,7 +126,7 @@ export function Library({ project, update, ai, go, notify }: ScreenProps) {
                 <div className={`small ${c.fixability === 'hard' ? 'muted' : 'ai-suggestion'}`}>{fixLine(c)}</div>
                 <div className="row">
                   <label className="row grow small">
-                    <input type="checkbox" checked={c.included} onChange={(e) => update((p) => setIncluded(p, c.id, e.target.checked))} /> 이 영상 쓰기
+                    <input type="checkbox" checked={c.included} onChange={(e) => toggle(c, e.target.checked)} /> 이 영상 쓰기
                   </label>
                   <button className="button small" onClick={() => remove(c.id)} aria-label={`${c.name} 삭제`}>삭제</button>
                 </div>

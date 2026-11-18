@@ -14,3 +14,9 @@
 
 - `npm run typecheck`, `npm run build`가 통과해야 한다.
 - 화면을 바꿨으면 `npm run dev`로 띄워 직접 본다.
+
+## 요청을 받았을 때
+
+- 화면·기능·규칙을 바꾸는 요청은 `docs/REQUEST_HISTORY.md` 맨 아래에 한 줄 추가한다(요청 → 정한 것 → 반영한 곳).
+- 편집 취향에 관한 요청(어떤 컷·분위기·자막을 좋아하는지)은 `server/taste-default.md`의 기본 취향 메모에도 반영한다.
+- 기능 정의가 아직 확정되지 않았다. `DESIGN_SYSTEM.md` 6장의 미정 항목은 지금 구현을 유지하고, 확정되면 그때 고친다.

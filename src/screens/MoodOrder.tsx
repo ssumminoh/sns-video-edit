@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '../api';
+import { api, logHistory } from '../api';
 import type { ScreenProps } from '../App';
 import { applyRhythm, moveInOrder } from '../shared/clips';
 import { FIX_LABEL, RHYTHMS, formatTime, orderNotes, orderedClips } from '../shared/reel';
@@ -40,8 +40,17 @@ export function MoodOrder({ project, update, go, notify }: ScreenProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const pickMood = (i: number) => update((p) => applyRhythm({ ...p, mood: i }, p.moods[i].rhythm));
-  const move = (from: number, to: number) => update((p) => moveInOrder(p, from, to));
+  function pickMood(i: number) {
+    update((p) => applyRhythm({ ...p, mood: i }, p.moods[i].rhythm));
+    const others = project.moods.filter((_, j) => j !== i).map((m) => `"${m.name}"`).join(', ');
+    logHistory('mood', `분위기 "${project.moods[i].name}"을 고름. 고르지 않은 제안: ${others || '없음'}`);
+  }
+  function move(from: number, to: number) {
+    if (from === to || to < 0 || to >= clips.length) return;
+    update((p) => moveInOrder(p, from, to));
+    const c = clips[from];
+    logHistory('order', `${c.title ?? c.name}${c.shot ? ` (${c.shot})` : ''}을 ${from + 1}번에서 ${to + 1}번으로 옮김 (전체 ${clips.length}컷)`);
+  }
   const suggested = project.suggestedOrder.filter((id) => ids.includes(id));
   const canSuggest = suggested.length === ids.length;
   const uploadOrder = project.clips.filter((c) => c.included).map((c) => c.id);
@@ -75,7 +84,7 @@ export function MoodOrder({ project, update, go, notify }: ScreenProps) {
           <div className="heading">순서</div>
           <div className="muted small">썸네일을 끌어다 놓아 순서를 바꾸세요 · 키보드는 ← → 버튼</div>
           <div className="grow" />
-          <button className="button small ai-suggestion" disabled={!canSuggest} onClick={() => update((p) => ({ ...p, order: suggested }))}>순서 제안 적용</button>
+          <button className="button small ai-suggestion" disabled={!canSuggest} onClick={() => { update((p) => ({ ...p, order: suggested })); logHistory('order', '순서 제안을 그대로 적용함'); }}>순서 제안 적용</button>
           <button className="button small" onClick={() => update((p) => ({ ...p, order: uploadOrder }))}>올린 순서로</button>
         </div>
 
@@ -129,7 +138,8 @@ export function MoodOrder({ project, update, go, notify }: ScreenProps) {
         <div className="grow" />
         <label className="field">
           <span className="muted small">분위기를 직접 한 줄로 쓰기</span>
-          <input id="own-mood" className="input" value={project.ownMood} placeholder="예: 비 오기 직전의 공원" onChange={(e) => update((p) => ({ ...p, ownMood: e.target.value }))} />
+          <input id="own-mood" className="input" value={project.ownMood} placeholder="예: 비 오기 직전의 공원" onChange={(e) => update((p) => ({ ...p, ownMood: e.target.value }))}
+            onBlur={(e) => { if (e.target.value.trim()) logHistory('mood', `분위기를 직접 씀: "${e.target.value.trim()}"`); }} />
         </label>
         <button className="button primary" disabled={clips.length === 0} onClick={() => go('rhythm')}>박자 맞추기 →</button>
       </aside>

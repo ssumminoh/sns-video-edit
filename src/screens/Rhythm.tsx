@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
-import { api } from '../api';
+import { api, logHistory } from '../api';
 import type { ScreenProps } from '../App';
 import { applyRhythm, patchClip, setBpm } from '../shared/clips';
-import { FIX_MODES, RHYTHMS, beatSeconds, formatTime, formatTimecode, maxBeats, orderedClips } from '../shared/reel';
+import { FIX_LABEL, FIX_MODES, RHYTHMS, beatSeconds, formatTime, formatTimecode, maxBeats, orderedClips } from '../shared/reel';
 import type { Clip, FixMode, Rhythm as RhythmId } from '../shared/types';
 
 const SPEEDS = [1, 1.5, 2];
@@ -93,7 +93,7 @@ export function Rhythm({ project, update, go, notify }: ScreenProps) {
             <div className="label">화면 전환 박자</div>
             <div className="row" style={{ alignItems: 'stretch' }}>
               {(Object.keys(RHYTHMS) as RhythmId[]).map((r) => (
-                <button key={r} className={`button grow ${project.rhythm === r ? 'selected' : ''}`} style={{ height: 'auto', padding: '10px 12px', textAlign: 'left' }} onClick={() => update((p) => applyRhythm(p, r))}>
+                <button key={r} className={`button grow ${project.rhythm === r ? 'selected' : ''}`} style={{ height: 'auto', padding: '10px 12px', textAlign: 'left' }} onClick={() => { update((p) => applyRhythm(p, r)); logHistory('rhythm', `박자를 "${RHYTHMS[r].name}"(${RHYTHMS[r].sub})으로 정함`); }}>
                   <div className="bold">{RHYTHMS[r].name}</div>
                   <div className="small">{RHYTHMS[r].sub}</div>
                 </button>
@@ -112,7 +112,7 @@ export function Rhythm({ project, update, go, notify }: ScreenProps) {
             </div>
             <div className="row">
               {MODES.map((m) => (
-                <button key={m} className={`button grow ${clip.fixMode === m ? 'selected' : ''}`} onClick={() => patch({ fixMode: m })}>{FIX_MODES[m].name}</button>
+                <button key={m} className={`button grow ${clip.fixMode === m ? 'selected' : ''}`} onClick={() => { patch({ fixMode: m }); logHistory('fix', `${clip.title ?? clip.name} (판정: ${FIX_LABEL[clip.fixability]})의 고정 모드를 "${FIX_MODES[m].name}"으로 정함`); }}>{FIX_MODES[m].name}</button>
               ))}
             </div>
             <div className="row">
@@ -130,7 +130,7 @@ export function Rhythm({ project, update, go, notify }: ScreenProps) {
               ))}
               <span className="muted" style={{ marginLeft: 12 }}>앞 컷에서 넘어올 때</span>
               <button className={`chip ${clip.transition === 'cut' ? 'selected' : ''}`} disabled={index === 0} onClick={() => patch({ transition: 'cut' })}>컷</button>
-              <button className={`chip ${clip.transition === 'dissolve' ? 'selected' : ''}`} disabled={index === 0} onClick={() => patch({ transition: 'dissolve' })}>디졸브 0.3초</button>
+              <button className={`chip ${clip.transition === 'dissolve' ? 'selected' : ''}`} disabled={index === 0} onClick={() => { patch({ transition: 'dissolve' }); logHistory('transition', `${index}번에서 ${index + 1}번으로 넘어갈 때 디졸브를 씀`); }}>디졸브 0.3초</button>
               <label className="row" style={{ marginLeft: 12 }}>
                 <span className="muted">시작 지점(초)</span>
                 <input id="trim-start" className="input number" type="number" min={0} max={Math.max(0, clip.duration - 0.5)} step={0.1} value={clip.trimStart}

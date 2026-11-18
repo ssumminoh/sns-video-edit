@@ -261,3 +261,10 @@ progress { width: 100%; }
 /* 오른쪽 아래의 주 버튼을 가리지 않도록 왼쪽 아래에 둔다. */
 .comment-toggle { position: absolute; left: 16px; bottom: 16px; height: var(--size-control-primary); border-color: var(--color-action-primary); color: var(--color-action-primary); background: var(--color-surface-panel); box-shadow: var(--shadow-floating); }
 .comment-toggle.selected { background: var(--color-action-primary); color: var(--color-text-on-primary); }
+
+/* 수정 기록과 취향 메모 */
+.history-toggle { position: absolute; left: 124px; bottom: 16px; height: var(--size-control-primary); background: var(--color-surface-panel); box-shadow: var(--shadow-floating); }
+.history-panel { position: absolute; left: 16px; bottom: 60px; width: 380px; max-width: calc(100vw - 32px); max-height: calc(100vh - 120px); display: flex; flex-direction: column; gap: var(--space-section); padding: var(--space-panel-padding); border: 1px solid var(--color-border-default); border-radius: var(--radius-card); background: var(--color-surface-panel-raised); box-shadow: var(--shadow-floating); overflow-y: auto; }
+.history-memo { height: 200px; padding: 8px; resize: vertical; line-height: var(--line-height-body); }
+.history-list { min-height: 60px; }
+.history-entry { padding: var(--space-tight) 0; border-bottom: 1px solid var(--color-border-default); }

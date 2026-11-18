@@ -8,7 +8,8 @@ import http from 'node:http';
 import path from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { ROOT } from '../scripts/lib/tools.mjs';
-import { aiConnected, analyzeClips, answerComment, translate } from './ai.mjs';
+import { aiConnected, analyzeClips, answerComment, distillTaste, translate } from './ai.mjs';
+import { appendHistory, readHistory, readTaste, tasteContext, writeTaste } from './history.mjs';
 import { analyzeMusic, analyzeVideo, stabilize } from './media.mjs';
 
 const PORT = Number(process.env.PORT ?? 8787);
@@ -165,7 +166,7 @@ async function api(req, res, url) {
 
   if (route === 'POST /api/analyze') {
     const { clips = [] } = await readJson(req);
-    return json(res, await analyzeClips(clips, (clip) => mediaPath(clip.thumb)));
+    return json(res, await analyzeClips(clips, (clip) => mediaPath(clip.thumb), await tasteContext()));
   }
 
   if (route === 'POST /api/translate') {
@@ -179,7 +180,28 @@ async function api(req, res, url) {
     if (!aiConnected()) throw new HttpError(501, 'AI가 연결되지 않아 댓글을 반영하지 못했어요. 서버에 ANTHROPIC_API_KEY를 설정해 주세요.');
     const body = await readJson(req);
     if (!body.comment?.trim()) throw new HttpError(400, '댓글 내용이 없습니다.');
-    return json(res, await answerComment(body));
+    return json(res, await answerComment(body, await tasteContext()));
+  }
+
+  if (route === 'GET /api/history') return json(res, { entries: await readHistory(), taste: await readTaste() });
+  if (route === 'POST /api/history') {
+    const entry = await readJson(req);
+    if (!entry.kind || !entry.summary) throw new HttpError(400, '기록할 내용이 없습니다.');
+    return json(res, { count: await appendHistory(entry) });
+  }
+  if (route === 'PUT /api/taste') {
+    const { taste } = await readJson(req);
+    if (typeof taste !== 'string' || !taste.trim()) throw new HttpError(400, '취향 메모가 비어 있습니다.');
+    await writeTaste(taste);
+    return json(res, { ok: true });
+  }
+  if (route === 'POST /api/taste/refresh') {
+    if (!aiConnected()) throw new HttpError(501, 'AI가 연결되지 않아 취향 메모를 자동으로 고치지 못해요. 직접 고쳐 쓸 수 있어요.');
+    const entries = await readHistory();
+    if (entries.length === 0) throw new HttpError(400, '아직 수정 기록이 없어요.');
+    const taste = await distillTaste(await readTaste(), entries.slice(-200));
+    await writeTaste(taste);
+    return json(res, { taste });
   }
 
   if (route === 'POST /api/stabilize') {

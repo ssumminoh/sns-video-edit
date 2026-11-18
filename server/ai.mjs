@@ -41,8 +41,8 @@ const SYSTEM = `당신은 브이로그 원본으로 담백한 릴스를 만드�
 분위기는 서로 다른 방향으로 3가지를 제안합니다. 모든 글은 한국어 해요체로 짧게 씁니다.
 순서는 고정된 넓은 화면으로 시작하고 끝내며, 같은 크기의 화면이 3번 이상 이어지지 않게 잡습니다.`;
 
-async function analyzeWithClaude(clips, readThumb) {
-  const content = [];
+async function analyzeWithClaude(clips, readThumb, taste) {
+  const content = [{ type: 'text', text: `이 사람의 취향과 지금까지의 수정 기록이에요. 제안에 반영하세요.\n\n${taste}` }];
   for (const clip of clips) {
     content.push({ type: 'text', text: `id: ${clip.id} · 길이 ${clip.duration.toFixed(1)}초 · 밝기 ${clip.brightness}/255 · 움직임 ${clip.motion} · ${clip.fixability}` });
     content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: (await readThumb(clip)).toString('base64') } });
@@ -124,12 +124,12 @@ function heuristic(clips) {
 }
 
 /** @returns {Promise<{source: 'ai'|'heuristic', clips: object[], moods: object[], order: string[], warning?: string}>} */
-export async function analyzeClips(clips, thumbPath) {
+export async function analyzeClips(clips, thumbPath, taste = '') {
   if (clips.length === 0) return { source: 'heuristic', clips: [], moods: [], order: [] };
   const base = heuristic(clips);
   if (!aiConnected()) return { source: 'heuristic', ...base };
   try {
-    const out = await analyzeWithClaude(clips, (clip) => readFile(thumbPath(clip)));
+    const out = await analyzeWithClaude(clips, (clip) => readFile(thumbPath(clip)), taste);
     const colors = base.moods[0].colors;
     const ids = new Set(clips.map((c) => c.id));
     const order = out.order.filter((id) => ids.has(id));
@@ -182,6 +182,7 @@ const CommentAnswer = z.object({
 
 const COMMENT_SYSTEM = `당신은 릴스 편집기 안에서 사용자가 화면에 남긴 댓글을 읽고 편집 내용을 직접 고치는 편집 조수입니다.
 댓글과 댓글이 찍힌 위치, 지금 프로젝트 상태를 받습니다. 댓글이 요구하는 만큼만 고치고, 요구하지 않은 것은 건드리지 않습니다.
+함께 받는 취향 메모와 수정 기록은 댓글이 모호할 때 해석하는 데만 씁니다.
 
 컷(clipId 지정)에서 고칠 수 있는 값:
 - beats: 이 컷의 박자 수 (정수, 1 이상)
@@ -204,7 +205,7 @@ const COMMENT_SYSTEM = `당신은 릴스 편집기 안에서 사용자가 화면
 위 목록으로 할 수 없는 요청(화면 디자인 변경, 새 영상 촬영 등)은 ops를 비우고 reply에 이유와 대신 할 수 있는 것을 씁니다.`;
 
 /** 댓글 하나를 읽고 수정 목록을 돌려준다. 실제 적용과 값 검증은 화면 쪽(src/shared/ops.ts)에서 한다. */
-export async function answerComment({ comment, target, screen, project }) {
+export async function answerComment({ comment, target, screen, project }, taste = '') {
   const response = await anthropic().messages.parse({
     model: MODEL,
     max_tokens: 8000,
@@ -212,11 +213,37 @@ export async function answerComment({ comment, target, screen, project }) {
     messages: [
       {
         role: 'user',
-        content: `지금 프로젝트:\n${JSON.stringify(project)}\n\n댓글이 찍힌 화면: ${screen}\n댓글이 찍힌 곳: ${target.label}${target.clipId ? ` (컷 id: ${target.clipId})` : ''}\n\n댓글: ${comment}`,
+        content: `${taste}\n\n지금 프로젝트:\n${JSON.stringify(project)}\n\n댓글이 찍힌 화면: ${screen}\n댓글이 찍힌 곳: ${target.label}${target.clipId ? ` (컷 id: ${target.clipId})` : ''}\n\n댓글: ${comment}`,
       },
     ],
     output_config: { effort: 'medium', format: zodOutputFormat(CommentAnswer) },
   });
   if (response.stop_reason === 'refusal' || !response.parsed_output) throw new Error('AI가 답하지 못했습니다.');
   return response.parsed_output;
+}
+
+// ---- 취향 메모 고치기 ----
+
+const TASTE_SYSTEM = `당신은 한 사람의 영상 편집 취향을 기록하는 메모를 관리합니다.
+지금의 취향 메모와 그 사람이 편집기에서 AI의 판단을 고친 기록을 받습니다.
+기록에서 되풀이되는 선택을 찾아 메모를 고칩니다.
+- 한두 번 나온 선택은 넣지 않습니다. 여러 번 되풀이된 것만 반영합니다.
+- 기록과 어긋나는 기존 내용은 고치고, 근거가 없는 내용을 새로 지어내지 않습니다.
+- 기존 메모의 제목 구조와 말투(짧은 한국어 문장, 글머리표)를 유지하고, 전체 40줄을 넘기지 않습니다.
+고친 메모 전체만 마크다운으로 출력합니다. 설명이나 머리말을 붙이지 않습니다.`;
+
+/** 수정 기록을 읽고 취향 메모를 고쳐 쓴다. */
+export async function distillTaste(taste, entries) {
+  const lines = entries.map((e) => `- ${e.at.slice(0, 10)} [${e.kind}] ${e.summary}`).join('\n');
+  const response = await anthropic().messages.create({
+    model: MODEL,
+    max_tokens: 4000,
+    system: TASTE_SYSTEM,
+    messages: [{ role: 'user', content: `<지금의 취향 메모>\n${taste}\n</지금의 취향 메모>\n\n<수정 기록>\n${lines}\n</수정 기록>` }],
+    output_config: { effort: 'medium' },
+  });
+  if (response.stop_reason === 'refusal') throw new Error('AI가 답하지 못했습니다.');
+  const text = response.content.filter((b) => b.type === 'text').map((b) => b.text).join('').trim();
+  if (!text) throw new Error('AI가 빈 답을 돌려줬습니다.');
+  return text;
 }

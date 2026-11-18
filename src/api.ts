@@ -21,6 +21,8 @@ export type ClipStats = Pick<Clip, 'id' | 'name' | 'file' | 'thumb' | 'duration'
 export type Analysis = { source: 'ai' | 'heuristic'; clips: Pick<Clip, 'id' | 'title' | 'scene' | 'shot'>[]; moods: Mood[]; order: string[]; warning?: string };
 export type RenderJob = { status: 'rendering' | 'done' | 'error'; progress: number; file: string | null; error: string | null };
 
+export type HistoryEntry = { at: string; kind: string; summary: string };
+
 export const api = {
   loadProject: () => call<{ project: Project | null; ai: boolean }>('/api/project'),
   saveProject: (project: Project) => call('/api/project', { method: 'PUT', body: JSON.stringify(project) }),
@@ -31,6 +33,17 @@ export const api = {
   translate: (text: string, from: CaptionLang, to: CaptionLang[]) => post<{ subs: string[] }>('/api/translate', { text, from, to }),
   stabilize: (file: string, mode: FixMode) => post<NonNullable<Clip['stabilized']>>('/api/stabilize', { file, mode }),
   comment: (body: { comment: string; screen: string; target: { label: string; clipId?: string }; project: unknown }) => post<{ reply: string; ops: Op[] }>('/api/comment', body),
+  history: () => call<{ entries: HistoryEntry[]; taste: string }>('/api/history'),
+  saveTaste: (taste: string) => call('/api/taste', { method: 'PUT', body: JSON.stringify({ taste }) }),
+  refreshTaste: () => post<{ taste: string }>('/api/taste/refresh', {}),
   render: (props: ReelProps) => post<{ job: string }>('/api/render', { props }),
   renderStatus: (job: string) => call<RenderJob>(`/api/render/${job}`),
 };
+
+/**
+ * 수정 기록 한 줄을 남긴다. 사용자가 AI의 판단을 고쳤거나 스스로 방향을 정한 순간에 부른다.
+ * 기록에 실패해도 편집은 계속되어야 하므로 오류를 삼킨다.
+ */
+export function logHistory(kind: string, summary: string) {
+  post('/api/history', { kind, summary }).catch(() => {});
+}

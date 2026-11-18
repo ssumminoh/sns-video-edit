@@ -1,6 +1,7 @@
 // 화면 아무 곳에나 댓글을 찍으면 AI가 읽고 편집 내용을 바로 고친 뒤 답을 단다.
 import { useState } from 'react';
-import { api } from './api';
+import { api, logHistory } from './api';
+import { History } from './History';
 import type { ScreenProps, StepId } from './App';
 import { applyOps } from './shared/ops';
 import type { Comment, Project } from './shared/types';
@@ -41,6 +42,8 @@ export function Comments({ step, project, update, ai, notify }: Pick<ScreenProps
   const [draft, setDraft] = useState<Draft | null>(null);
   const [text, setText] = useState('');
   const [open, setOpen] = useState<string | null>(null);
+  // 댓글이 고치기 직전의 프로젝트. 화면을 새로 열기 전까지만 되돌릴 수 있다.
+  const [undo, setUndo] = useState<Record<string, Project>>({});
   const here = project.comments.filter((c) => c.step === step);
   const patch = (id: string, change: Partial<Comment>) => update((p) => ({ ...p, comments: p.comments.map((c) => (c.id === id ? { ...c, ...change } : c)) }));
 
@@ -60,13 +63,24 @@ export function Comments({ step, project, update, ai, notify }: Pick<ScreenProps
         const result = applyOps(p, answer.ops);
         applied = result.applied.length;
         skipped = result.skipped.length;
+        if (applied > 0) setUndo((u) => ({ ...u, [comment.id]: p }));
         return result.project;
       });
+      logHistory('comment', `"${comment.text}" (찍은 곳: ${comment.target.label}) → 수정 ${answer.ops.length - skipped}개 반영. AI 답: ${answer.reply}`);
       patch(comment.id, { status: 'done', reply: answer.reply + (skipped ? ` (반영하지 못한 수정 ${skipped}개)` : ''), applied });
     } catch (err) {
       patch(comment.id, { status: 'error', reply: (err as Error).message });
       notify((err as Error).message);
     }
+  }
+
+  /** 댓글이 고친 내용을 고치기 전으로 돌린다. 댓글 목록은 지금 것을 유지한다. */
+  function revert(c: Comment) {
+    const before = undo[c.id];
+    if (!before) return;
+    update((p) => ({ ...before, comments: p.comments.map((x) => (x.id === c.id ? { ...x, reply: `${x.reply} (되돌림)`, applied: 0 } : x)) }));
+    setUndo(({ [c.id]: _removed, ...rest }) => rest);
+    logHistory('undo', `댓글 "${c.text}"의 수정을 되돌림. AI의 해석이 원하던 것과 달랐음.`);
   }
 
   const pinStyle = (c: Pick<Comment, 'x' | 'y'>) => ({ left: `${c.x * 100}%`, top: `${c.y * 100}%` });
@@ -96,6 +110,7 @@ export function Comments({ step, project, update, ai, notify }: Pick<ScreenProps
               </div>
               <div className="row">
                 <div className="grow" />
+                {undo[c.id] ? <button className="button small" onClick={() => revert(c)}>되돌리기</button> : null}
                 <button className="button small" onClick={() => update((p) => ({ ...p, comments: p.comments.filter((x) => x.id !== c.id) }))}>해결됨으로 지우기</button>
               </div>
             </div>
@@ -121,6 +136,7 @@ export function Comments({ step, project, update, ai, notify }: Pick<ScreenProps
         </div>
       ) : null}
 
+      <History ai={ai} notify={notify} />
       <button className={`button comment-toggle ${placing ? 'selected' : ''}`} onClick={() => { setPlacing(!placing); setDraft(null); setOpen(null); }}>
         {placing ? '고칠 곳을 누르세요 · 취소' : `댓글로 고치기${here.length ? ` (${here.length})` : ''}`}
       </button>
